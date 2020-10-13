@@ -23,7 +23,9 @@ import android.view.View;
 
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.Util;
 
 
@@ -48,11 +50,35 @@ public class PlayerActivity extends AppCompatActivity {
 
   //supply the state information you saved in releasePlayer to your player during initialization.
   private void initializePlayer(){
-    player = new SimpleExoPlayer.Builder(this).build();
-    playerView.setPlayer(player);
 
+    if (player == null){
+      // First, create a DefaultTrackSelector, which is responsible for choosing tracks in the media item.
+      DefaultTrackSelector trackSelector = new DefaultTrackSelector(this);
+      // Then, tell your trackSelector to only pick tracks of standard definition or
+      // lower—a good way of saving your user's data at the expense of quality.
+      trackSelector.setParameters(trackSelector.buildUponParameters().setMaxVideoSizeSd()); // max video height width
+      // Lastly, pass your trackSelector to your builder so that it is used when building
+      // the SimpleExoPlayer instance.
+      player = new SimpleExoPlayer.Builder(this).setTrackSelector(trackSelector).build();
+    }
+//    player = new SimpleExoPlayer.Builder(this).build();
+    playerView.setPlayer(player);
+/*
     MediaItem mediaItem = MediaItem.fromUri(getString(R.string.media_url_mp3));
     player.setMediaItem(mediaItem);
+
+    // second mediaItem added
+    MediaItem secondMediaItem = MediaItem.fromUri(getString(R.string.media_url_mp3));
+    player.addMediaItem(secondMediaItem);
+
+ */
+
+    MediaItem mediaItem = new MediaItem.Builder()
+                          .setUri(getString(R.string.media_url_dash))
+                          .setMimeType(MimeTypes.APPLICATION_MPD)
+                          .build();
+    player.setMediaItem(mediaItem);
+
     //setPlayWhenReady tells the player whether to start playing as soon as all resources
     // for playback have been acquired.
     player.setPlayWhenReady(playWhenReady);
